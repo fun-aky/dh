@@ -1,0 +1,443 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>简约导航 - 可访问性检测</title>
+  <style>
+body {
+  min-height: 100vh;
+  margin: 0;
+  padding: 0;
+  font-family: 'Inter', 'PingFang SC', 'Hiragino Sans GB', Arial, sans-serif;
+  background: #f5f6fa;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+h1 {
+  margin-top: 72px;
+  font-size: 2.5rem;
+  color: #222;
+  font-weight: 800;
+  letter-spacing: 1px;
+  margin-bottom: 40px;
+}
+.nav-list {
+  margin-top: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+  width: 100%;
+  max-width: 480px;
+}
+.nav-item {
+  background: #fff;
+  border-radius: 16px;
+  box-shadow: 0 2px 12px 0 rgba(0,0,0,0.06);
+  display: flex;
+  align-items: center;
+  padding: 28px 32px;
+  transition: box-shadow 0.18s, transform 0.13s;
+  position: relative;
+  border: 1px solid #f0f0f0;
+}
+.nav-item:hover {
+  box-shadow: 0 8px 32px 0 rgba(22,119,255,0.10);
+  transform: translateY(-2px) scale(1.01);
+}
+.nav-title {
+  font-size: 1.18rem;
+  color: #222;
+  font-weight: 600;
+  flex: 1;
+  letter-spacing: 0.5px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.nav-btn {
+  background: #1677ff;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 10px 32px;
+  font-size: 1.08rem;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(22,119,255,0.08);
+  transition: background 0.18s, box-shadow 0.18s, transform 0.1s;
+  margin-left: 16px;
+  outline: none;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.nav-btn:hover {
+  background: #0958d9;
+  box-shadow: 0 4px 16px rgba(22,119,255,0.16);
+  transform: scale(1.04);
+}
+.nav-btn svg {
+  width: 20px;
+  height: 20px;
+  fill: #fff;
+}
+.nav-btn:disabled,
+.nav-btn.disabled {
+  background: #f0f0f0 !important;
+  color: #bdbdbd !important;
+  cursor: not-allowed !important;
+  box-shadow: none !important;
+  border: none;
+}
+.nav-btn.disabled svg {
+  fill: #bdbdbd !important;
+}
+.status {
+  margin-left: 24px;
+  font-size: 1.02rem;
+  min-width: 90px;
+  text-align: right;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: none;
+  border-radius: 6px;
+  padding: 0;
+  letter-spacing: 0.5px;
+}
+.status-dot {
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: #bdbdbd;
+  margin-right: 4px;
+  transition: background 0.2s;
+  box-shadow: 0 1px 4px #1677ff22;
+}
+.status.ok .status-dot {
+  background: #1677ff;
+}
+.status.fail .status-dot {
+  background: #ff4d4f;
+}
+.status.checking .status-dot {
+  background: #faad14;
+}
+.status.ok { color: #1677ff; }
+.status.fail { color: #ff4d4f; }
+.status.checking { color: #faad14; }
+.notice-bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: #f0f7ff;
+  color: #1677ff;
+  border-radius: 10px;
+  padding: 14px 22px;
+  margin-bottom: 32px;
+  font-size: 1.05rem;
+  box-shadow: 0 2px 8px #e0e7ff80;
+  max-width: 520px;
+  margin-left: auto;
+  margin-right: auto;
+}
+.notice-bar svg {
+  width: 22px;
+  height: 22px;
+  fill: #1677ff;
+  flex-shrink: 0;
+}
+@media (max-width: 700px) {
+  .nav-list { max-width: 98vw; }
+  .nav-item { padding: 16px 4vw; }
+  h1 { font-size: 1.3rem; }
+  .notice-bar { font-size: 0.98rem; padding: 10px 8px; }
+  .notice-bar svg { width: 18px; height: 18px; }
+}
+/* 密码遮罩样式 */
+#password-mask {
+  position: fixed;
+  z-index: 9999;
+  inset: 0;
+  background: #f5f6fae6;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  transition: opacity 0.3s;
+}
+#password-box {
+  background: #fff;
+  border-radius: 16px;
+  box-shadow: 0 8px 32px 0 rgba(22,119,255,0.10);
+  padding: 40px 32px 32px 32px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-width: 320px;
+  border: 1px solid #f0f0f0;
+}
+#password-box h2 {
+  color: #222;
+  font-size: 1.3rem;
+  font-weight: 800;
+  margin-bottom: 18px;
+  letter-spacing: 1px;
+}
+#password-tip {
+  color: #1677ff;
+  font-size: 1.08rem;
+  font-weight: 600;
+  margin-bottom: 12px;
+  letter-spacing: 2px;
+  user-select: all;
+}
+#password-desc {
+  background: #f0f7ff;
+  border-radius: 8px;
+  padding: 10px 14px;
+  color: #1677ff;
+  font-size: 0.98rem;
+  margin-bottom: 16px;
+  text-align: center;
+  line-height: 1.7;
+  max-width: 320px;
+  box-shadow: 0 2px 8px #e0e7ff80;
+}
+#password-input {
+  font-size: 1.08rem;
+  padding: 10px 16px;
+  border-radius: 6px;
+  border: 1.5px solid #e0e7ff;
+  outline: none;
+  margin-bottom: 14px;
+  width: 200px;
+  transition: border 0.2s;
+}
+#password-input:focus {
+  border: 1.5px solid #1677ff;
+}
+#password-submit {
+  background: #1677ff;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 8px 32px;
+  font-size: 1.05rem;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(22,119,255,0.10);
+  transition: background 0.18s, box-shadow 0.18s, transform 0.1s;
+}
+#password-submit:hover {
+  background: #0958d9;
+  box-shadow: 0 4px 16px rgba(22,119,255,0.16);
+  transform: scale(1.04);
+}
+#password-error {
+  color: #ff4d4f;
+  font-size: 1rem;
+  margin-top: 8px;
+  min-height: 24px;
+  letter-spacing: 1px;
+}
+@media (max-width: 500px) {
+  #password-box { min-width: 90vw; padding: 24px 4vw 18px 4vw; }
+  #password-input { width: 100%; }
+}
+</style>
+</head>
+<body>
+  <h1>简约导航</h1>
+  <div class="notice-bar">
+    <svg viewBox="0 0 24 24"><path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>
+    <span>公告：本导航仅供学习交流使用，部分站点可能因网络原因无法访问。如有建议请联系管理员。</span>
+  </div>
+  <div class="nav-list">
+    <div class="nav-item" data-url="https://www.baidu.com">
+      <span class="nav-title">百度</span>
+      <button class="nav-btn" data-url="https://www.baidu.com" title="访问">
+        访问
+        <svg viewBox="0 0 24 24"><path d="M13.293 5.293a1 1 0 0 1 1.414 0l6 6a1 1 0 0 1 0 1.414l-6 6a1 1 0 1 1-1.414-1.414L16.586 13H5a1 1 0 1 1 0-2h11.586l-3.293-3.293a1 1 0 0 1 0-1.414z"></path></svg>
+      </button>
+      <span class="status checking"><span class="status-dot"></span>检测中...</span>
+    </div>
+    <div class="nav-item" data-url="https://www.qq.com">
+      <span class="nav-title">腾讯</span>
+      <button class="nav-btn" data-url="https://www.qq.com" title="访问">
+        访问
+        <svg viewBox="0 0 24 24"><path d="M13.293 5.293a1 1 0 0 1 1.414 0l6 6a1 1 0 0 1 0 1.414l-6 6a1 1 0 1 1-1.414-1.414L16.586 13H5a1 1 0 1 1 0-2h11.586l-3.293-3.293a1 1 0 0 1 0-1.414z"></path></svg>
+      </button>
+      <span class="status checking"><span class="status-dot"></span>检测中...</span>
+    </div>
+    <div class="nav-item" data-url="https://www.jdbndbfs.com">
+      <span class="nav-title">未知</span>
+      <button class="nav-btn" data-url="https://www.jdbndbfs.com" title="访问">
+        访问
+        <svg viewBox="0 0 24 24"><path d="M13.293 5.293a1 1 0 0 1 1.414 0l6 6a1 1 0 0 1 0 1.414l-6 6a1 1 0 1 1-1.414-1.414L16.586 13H5a1 1 0 1 1 0-2h11.586l-3.293-3.293a1 1 0 0 1 0-1.414z"></path></svg>
+      </button>
+      <span class="status checking"><span class="status-dot"></span>检测中...</span>
+    </div>
+    <div class="nav-item" data-url="https://www.google.com">
+      <span class="nav-title">谷歌</span>
+      <button class="nav-btn" data-url="https://www.google.com" title="访问">
+        访问
+        <svg viewBox="0 0 24 24"><path d="M13.293 5.293a1 1 0 0 1 1.414 0l6 6a1 1 0 0 1 0 1.414l-6 6a1 1 0 1 1-1.414-1.414L16.586 13H5a1 1 0 1 1 0-2h11.586l-3.293-3.293a1 1 0 0 1 0-1.414z"></path></svg>
+      </button>
+      <span class="status checking"><span class="status-dot"></span>检测中...</span>
+    </div>
+  </div>
+  <script>
+    // 检测每个网址的可访问性和延迟
+    document.querySelectorAll('.nav-item').forEach(item => {
+      const url = item.getAttribute('data-url');
+      const statusSpan = item.querySelector('.status');
+      const btn = item.querySelector('.nav-btn');
+      // 采用请求 favicon.ico 的方式检测可访问性
+      const testUrl = url + '/favicon.ico?_=' + Date.now();
+      const start = performance.now();
+      fetch(testUrl, {mode: 'no-cors'})
+        .then(() => {
+          const delay = Math.round(performance.now() - start);
+          statusSpan.innerHTML = '<span class="status-dot"></span>可访问 | ' + delay + 'ms';
+          statusSpan.className = 'status ok';
+          btn.disabled = false;
+          btn.classList.remove('disabled');
+          btn.innerHTML = '访问 <svg viewBox="0 0 24 24"><path d="M13.293 5.293a1 1 0 0 1 1.414 0l6 6a1 1 0 0 1 0 1.414l-6 6a1 1 0 1 1-1.414-1.414L16.586 13H5a1 1 0 1 1 0-2h11.586l-3.293-3.293a1 1 0 0 1 0-1.414z"></path></svg>';
+        })
+        .catch(() => {
+          // fetch no-cors 下即使失败也会走 then，所以用超时兜底
+        });
+      // 2秒超时兜底
+      setTimeout(() => {
+        if (statusSpan.classList.contains('checking')) {
+          statusSpan.innerHTML = '<span class="status-dot"></span>无法访问';
+          statusSpan.className = 'status fail';
+          btn.disabled = true;
+          btn.classList.add('disabled');
+          btn.innerHTML = '不可用 <svg viewBox="0 0 24 24"><path d="M13.293 5.293a1 1 0 0 1 1.414 0l6 6a1 1 0 0 1 0 1.414l-6 6a1 1 0 1 1-1.414-1.414L16.586 13H5a1 1 0 1 1 0-2h11.586l-3.293-3.293a1 1 0 0 1 0-1.414z"></path></svg>';
+        }
+      }, 2000);
+    });
+    // 按钮点击访问网址
+    document.querySelectorAll('.nav-btn').forEach(btn => {
+      btn.addEventListener('click', function() {
+        const url = btn.getAttribute('data-url');
+        window.open(url, '_blank');
+      });
+    });
+  </script>
+  <script>
+// 24小时免输密码逻辑
+const PASS_KEY = 'nav_page_pass';
+const PASS_TIME_KEY = 'nav_page_pass_time';
+const PASS_EXPIRE = 24 * 60 * 60 * 1000; // 24小时
+function getCurrentPassword() {
+  const time = localStorage.getItem(PASS_TIME_KEY);
+  let pass = localStorage.getItem(PASS_KEY);
+  if (!pass || !time || Date.now() - Number(time) > PASS_EXPIRE) {
+    // 生成新密码并存储
+    pass = String(Math.floor(100000 + Math.random() * 900000));
+    localStorage.setItem(PASS_KEY, pass);
+    localStorage.setItem(PASS_TIME_KEY, Date.now().toString());
+  }
+  return pass;
+}
+const pagePassword = getCurrentPassword();
+console.log('本次访问密码：', pagePassword);
+function isPassValid() {
+  const pass = localStorage.getItem(PASS_KEY);
+  const time = localStorage.getItem(PASS_TIME_KEY);
+  if (pass === pagePassword && time && Date.now() - Number(time) < PASS_EXPIRE) {
+    return true;
+  }
+  return false;
+}
+function getUrlParam() {
+  // 支持 ?url=xxx 或 #url=xxx
+  const search = window.location.search;
+  const hash = window.location.hash;
+  let url = '';
+  if (search.includes('url=')) {
+    url = decodeURIComponent(search.split('url=')[1].split('&')[0]);
+  } else if (hash.includes('url=')) {
+    url = decodeURIComponent(hash.split('url=')[1].split('&')[0]);
+  }
+  return url;
+}
+function addCustomNavItem(url) {
+  if (!/^https?:\/\//.test(url)) url = 'https://' + url;
+  let domain = url.replace(/^https?:\/\//, '').split('/')[0];
+  const navList = document.querySelector('.nav-list');
+  const div = document.createElement('div');
+  div.className = 'nav-item';
+  div.setAttribute('data-url', url);
+  div.innerHTML = `
+    <span class="nav-title">自定义：${domain}</span>
+    <button class="nav-btn" data-url="${url}" title="访问">
+      访问
+      <svg viewBox="0 0 24 24"><path d="M13.293 5.293a1 1 0 0 1 1.414 0l6 6a1 1 0 0 1 0 1.414l-6 6a1 1 0 1 1-1.414-1.414L16.586 13H5a1 1 0 1 1 0-2h11.586l-3.293-3.293a1 1 0 0 1 0-1.414z"></path></svg>
+    </button>
+    <span class="status checking"><span class="status-dot"></span>检测中...</span>
+  `;
+  navList.insertBefore(div, navList.firstChild);
+}
+window.addEventListener('DOMContentLoaded', () => {
+  const customUrl = getUrlParam();
+  if (customUrl) addCustomNavItem(customUrl);
+});
+</script>
+<div id="password-mask">
+  <form id="password-box" autocomplete="off">
+    <h2>请输入访问密码</h2>
+    <div id="password-tip" style="color:#2563eb;font-size:1.15rem;font-weight:600;margin-bottom:18px;letter-spacing:2px;user-select:all;">本次密码：<span id="password-show"></span></div>
+    <div id="password-desc" style="background:#e8f1ff;border-radius:10px;padding:14px 18px;color:#2563eb;font-size:0.98rem;margin-bottom:18px;text-align:center;line-height:1.7;max-width:320px;box-shadow:0 2px 8px #e0e7ff80;">
+      为了保护页面内容安全，请输入上方随机生成的6位数字密码。<br>
+      密码正确后，24小时内再次访问无需重复输入。
+    </div>
+    <input id="password-input" type="password" maxlength="12" placeholder="请输入6位数字" autofocus />
+    <button id="password-submit" type="submit">进入</button>
+    <div id="password-error"></div>
+  </form>
+</div>
+<script>
+// 密码校验逻辑
+const mask = document.getElementById('password-mask');
+const input = document.getElementById('password-input');
+const form = document.getElementById('password-box');
+const error = document.getElementById('password-error');
+document.getElementById('password-show').textContent = pagePassword;
+
+// 检查本地存储
+if (isPassValid()) {
+  mask.style.display = 'none';
+  document.body.style.overflow = '';
+} else {
+  window.addEventListener('DOMContentLoaded', () => {
+    document.body.style.overflow = 'hidden';
+    input.focus();
+  });
+}
+
+form.addEventListener('submit', function(e) {
+  e.preventDefault();
+  if (input.value === pagePassword) {
+    mask.style.opacity = 0;
+    setTimeout(() => mask.style.display = 'none', 350);
+    document.body.style.overflow = '';
+    // 存储密码和时间
+    localStorage.setItem(PASS_KEY, pagePassword);
+    localStorage.setItem(PASS_TIME_KEY, Date.now().toString());
+  } else {
+    error.textContent = '密码错误，请重试';
+    input.value = '';
+    input.focus();
+  }
+});
+</script>
+</body>
+</html> 
